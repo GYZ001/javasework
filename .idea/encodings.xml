@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding" defaultCharsetForPropertiesFiles="UTF-8">
+    <file url="file://$PROJECT_DIR$/a.txt" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/b.txt" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/f.txt" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/com/test/CodeSocket/Test2.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/com/test/CodeSocket/Test3.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/com/test/CodeSocket/Test4.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/com/test/CodeSocket/Test5.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/com/test/IO/Test1.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/com/test/IO/Test6.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/com/test/IO/Test7.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/com/test/Multithreading/ThreadTest/TimeThread.java" charset="UTF-8" />
+    <file url="PROJECT" charset="UTF-8" />
+  </component>
+</project>
