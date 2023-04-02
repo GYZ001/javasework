@@ -4,15 +4,10 @@
  */
 package org.jinzhi.qq.Client.component;
 
-import org.jinzhi.qq.Client.bean.Qquser;
+import org.jinzhi.qq.Server.bean.Qquser;
 
-import java.awt.Color;
-import java.awt.Component;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JList;
-import javax.swing.ListCellRenderer;
+import javax.swing.*;
+import java.awt.*;
 
 
 

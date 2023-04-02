@@ -16,7 +16,7 @@ public class DBUtil {
 		try {
 			Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
 			conn = DriverManager.getConnection("jdbc:sqlserver://127.0.0.1:1433;DatabaseName=yqdqq", "sa", "sa");
-			System.out.println("DB successful！");
+
 		} catch (ClassNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

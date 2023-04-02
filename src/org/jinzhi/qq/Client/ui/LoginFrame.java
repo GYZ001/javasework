@@ -1,6 +1,7 @@
 package org.jinzhi.qq.Client.ui;
 
 import org.jinzhi.qq.Client.component.ImgPanel;
+import org.jinzhi.qq.Client.pub.UDPSocket;
 import org.jinzhi.qq.Server.pub.CommonUse;
 import org.jinzhi.qq.Server.pub.TCPMessage;
 import org.jinzhi.qq.Client.pub.TCPSocket;
@@ -13,20 +14,22 @@ import java.awt.event.ActionListener;
 
 public class LoginFrame extends JFrame implements ActionListener {
 
-    TCPSocket tcpSocket = null;
-    JPanel bodyPanel = null;
-    JPanel centerPanel = null;
-    JPanel bottomPanel = null;
+    private TCPSocket tcpSocket = null;
+    private UDPSocket udpSocket = null;
 
-    JLabel accountLabel = null;
-    JTextField accountTextField  = null;
-    JLabel passowrdLabel = null;
-    JPasswordField passwordField = null;
+    private JPanel bodyPanel = null;
+    private JPanel centerPanel = null;
+    private JPanel bottomPanel = null;
 
-    JButton loginButton = null;
-    JButton registerButton = null;
+    private JLabel accountLabel = null;
+    private JTextField accountTextField = null;
+    private JLabel passowrdLabel = null;
+    private JPasswordField passwordField = null;
 
-    public  void initcenter(){
+    private JButton loginButton = null;
+    private JButton registerButton = null;
+
+    public void initcenter() {
         this.centerPanel = new ImgPanel("./logon.jpg");
 
         this.accountLabel = new JLabel("用 户 名：", JLabel.RIGHT);
@@ -52,7 +55,7 @@ public class LoginFrame extends JFrame implements ActionListener {
         this.centerPanel.add(box0);
     }
 
-    public void initbottom(){
+    public void initbottom() {
         this.bottomPanel = new JPanel();
         this.loginButton = new JButton("登陆");
         this.loginButton.addActionListener(this);
@@ -62,8 +65,8 @@ public class LoginFrame extends JFrame implements ActionListener {
         this.bottomPanel.add(this.registerButton);
     }
 
-    public void init (){
-        this.bodyPanel = (JPanel)this.getContentPane();
+    public void init() {
+        this.bodyPanel = (JPanel) this.getContentPane();
         this.bodyPanel.setLayout(new BorderLayout());
 
         this.initcenter();
@@ -77,7 +80,8 @@ public class LoginFrame extends JFrame implements ActionListener {
     }
 
     public LoginFrame() {
-        tcpSocket = new TCPSocket(CommonUse.SERVER_IP,CommonUse.SERVER_PORT);
+        this.tcpSocket = new TCPSocket(CommonUse.SERVER_IP, CommonUse.SERVER_PORT);
+        this.udpSocket = new UDPSocket();
         this.init();
     }
 
@@ -85,10 +89,12 @@ public class LoginFrame extends JFrame implements ActionListener {
         LoginFrame loginFrame = new LoginFrame();
         loginFrame.setBounds(100, 100, 414, 307);
         loginFrame.setVisible(true);
+
     }
+
     @Override
     public void actionPerformed(ActionEvent e) {
-        if(e.getSource() == this.loginButton) {
+        if (e.getSource() == this.loginButton) {
             String account = this.accountTextField.getText();
             String password = new String(this.passwordField.getPassword());
 
@@ -96,7 +102,7 @@ public class LoginFrame extends JFrame implements ActionListener {
             qquser.setAccount(account);
             qquser.setPassword(password);
             qquser.setIp(this.tcpSocket.getIp());
-            qquser.setPort("00000");
+            qquser.setPort(String.valueOf(this.udpSocket.getPort()));
 
             TCPMessage sMessage = new TCPMessage();//发送报文
             sMessage.setHead(CommonUse.LOGIN);
@@ -104,10 +110,10 @@ public class LoginFrame extends JFrame implements ActionListener {
             TCPMessage rMessage = this.tcpSocket.submit(sMessage);//接收报文
 
             String head = rMessage.getHead();
-            if(CommonUse.SUCCESSFUL.equals(head)) {
+            if (CommonUse.SUCCESSFUL.equals(head)) {
                 JOptionPane.showMessageDialog(this, "登录成功");
-                Qquser fullUser = (Qquser)rMessage.getBody(CommonUse.QQ_USER);
-                MainFrame mainFrame1 = new MainFrame(this.tcpSocket,fullUser);
+                Qquser fullUser = (Qquser) rMessage.getBody(CommonUse.QQ_USER);
+                MainFrame mainFrame1 = new MainFrame(this.tcpSocket, this.udpSocket, fullUser);
                 mainFrame1.setBounds(100, 20, 320, 600);
                 mainFrame1.setVisible(true);
                 this.dispose();
@@ -116,4 +122,5 @@ public class LoginFrame extends JFrame implements ActionListener {
             }
         }
     }
+
 }
