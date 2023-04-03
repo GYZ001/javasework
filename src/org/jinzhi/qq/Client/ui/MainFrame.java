@@ -11,8 +11,12 @@ import org.jinzhi.qq.Server.pub.TCPMessage;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class MainFrame extends JFrame implements UDPListener {
     private TCPSocket tcpSocket = null;
@@ -26,6 +30,9 @@ public class MainFrame extends JFrame implements UDPListener {
     private JLabel nameLabel = null;//看得见
     private JList<Qquser> friendList = null;
     private DefaultListModel<Qquser> listModel = null;
+
+
+    private Map<String, ChatFrame> chatmap = new HashMap<>();
 
     private List<Qquser> getFriends(Qquser qquser) {
         List<Qquser> friends = null;
@@ -108,25 +115,29 @@ public class MainFrame extends JFrame implements UDPListener {
             this.listModel.addElement(qquser);
         }
         this.friendList.setModel(this.listModel);
-
-//        this.friendList.addMouseListener(new MouseAdapter() {
-//            @Override
-//            public void mouseClicked(MouseEvent e) {
-//                if (e.getClickCount() == 2) {
-//                    int index = friendList.getSelectedIndex();
-//                    Qquser qquser = listModel.getElementAt(index);
-//                    // 打开聊天界面
-//                    openChatFrame(qquser,udpSocket);
-//                }
-//            }
-//        });
+        //鼠标监听事件
+        this.friendList.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    int index = friendList.getSelectedIndex();
+                    Qquser qquser = listModel.getElementAt(index);
+                    // 打开聊天界面
+                    chatmap.put(qquser.getName(), openChatFrame(qquser, FullUser,udpSocket, chatmap));
+                }
+            }
+        });
     }
 
-//    private void openChatFrame(Qquser qquser,UDPSocket udpSocket) {
-//        ChatFrame chatFrame = new ChatFrame(qquser,this.udpSocket);
-//        chatFrame.setBounds(100, 20, 400, 300);
-//        chatFrame.setVisible(true);
-//    }
+    private ChatFrame openChatFrame(Qquser qquser,Qquser myuser, UDPSocket udpSocket, Map chatmap) {
+        if (chatmap.get(qquser.getName()) != null) {
+            return (ChatFrame)chatmap.get(qquser.getName());
+        }
+        ChatFrame chatFrame = new ChatFrame(qquser, myuser,this.udpSocket, this.chatmap);
+        chatFrame.setBounds(300, 150, 400, 300);
+        chatFrame.setVisible(true);
+        return chatFrame;
+    }
 
     private void init() {
         this.bodyPanel = (JPanel) this.getContentPane();
@@ -151,7 +162,6 @@ public class MainFrame extends JFrame implements UDPListener {
         this.udpSocket = udpSocket;
         FullUser = fullUser;
         this.init();
-        this.tcpSocket.start(fullUser);
     }
 
     @Override
@@ -185,6 +195,26 @@ public class MainFrame extends JFrame implements UDPListener {
             }
         }
         this.refreshlist();
+
+        if ("message".equals(head)) {
+            String Name = messages[1];
+            String ip = messages[2];
+            String port = messages[3];
+            String info = messages[4];
+
+            ChatFrame MyChatFrame = null;
+            if (chatmap.get(Name) != null) {
+                MyChatFrame = chatmap.get(Name);
+            }else{
+                Qquser qquser = new Qquser();
+                qquser.setIp(ip);
+                qquser.setName(Name);
+                qquser.setPort(port);
+                MyChatFrame = openChatFrame(qquser,FullUser,new UDPSocket(),chatmap);
+                MyChatFrame.chatmap.put(Name,MyChatFrame);
+            }
+            MyChatFrame.reMessage(info);
+        }
     }
 
 }

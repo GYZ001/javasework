@@ -14,17 +14,16 @@ import java.net.Socket;
 import java.util.List;
 
 public class ServerThread5 extends Thread {
-
     private Socket socket = null;
     private ObjectOutputStream out = null;
     private ObjectInputStream in = null;
 
     private Qquser fullUser = null;
+    private Qquser enduser = null;
 //=============================================================================================================
 
     private List<Qquser> getFriends(String account) {
         List<Qquser> list = null;
-
         String sql = "select * from qquser where"
                 + " account in (select friendAccount from friend where userAccount = '" + account + "')";
         list = new QqUserDaoImpl().findBySql(sql);
@@ -34,17 +33,13 @@ public class ServerThread5 extends Thread {
     private Qquser getFullUser(String account) {
         return new QqUserDaoImpl().findById(account);
     }
-
+//===============================================================================================================
     private void updateDB(Qquser qquser) {
-        qquser.setState("1");
         QqUserDao dao = new QqUserDaoImpl();
         dao.update(qquser);
     }
 
     private void updateDBoff(Qquser qquser) {
-        qquser.setState("0");
-        qquser.setIp("0");
-        qquser.setPort("0");
         QqUserDao dao = new QqUserDaoImpl();
         dao.update(qquser);
     }
@@ -60,7 +55,6 @@ public class ServerThread5 extends Thread {
         if (tempUser != null && tempUser.getPassword().equals(password)) {
             return true;
         }
-
         return false;
     }
 
@@ -85,12 +79,11 @@ public class ServerThread5 extends Thread {
         String sql = "select * from qquser where"
                 + " account in (select friendAccount from friend where userAccount " +
                 "= '" + qquser.getAccount() + "') and state = '1'";
-
-        list = new QqUserDaoImpl().findBySql(sql);
-
         String sMessage = CommonUse.ONLINE + CommonUse.UDP_PACKET_SYMBOL + qquser.getAccount()
                 + CommonUse.UDP_PACKET_SYMBOL + qquser.getIp() + CommonUse.UDP_PACKET_SYMBOL
                 + qquser.getPort() + CommonUse.UDP_PACKET_SYMBOL;
+
+        list = new QqUserDaoImpl().findBySql(sql);
         for (Qquser temp : list) {
             UDPSocket udpSocket = new UDPSocket(temp.getIp(), Integer.parseInt(temp.getPort()));
             udpSocket.send(sMessage);
@@ -98,32 +91,37 @@ public class ServerThread5 extends Thread {
     }
 
     private void offline(Qquser qquser) {
+        qquser.setIp("0");
+        qquser.setPort("0");
+        qquser.setState("0");
         List<Qquser> list = null;
         String sql = "select * from qquser where"
                 + " account in (select friendAccount from friend where userAccount " +
                 "= '" + qquser.getAccount() + "') and state = '1'";
+        String sMessage = CommonUse.OFFLINE + CommonUse.UDP_PACKET_SYMBOL +
+                qquser.getAccount() + CommonUse.UDP_PACKET_SYMBOL;
 
         list = new QqUserDaoImpl().findBySql(sql);
-
-        String sMessage = CommonUse.OFFLINE + CommonUse.UDP_PACKET_SYMBOL +
-                qquser.getAccount()+ CommonUse.UDP_PACKET_SYMBOL;
         for (Qquser temp : list) {
             UDPSocket udpSocket = new UDPSocket(temp.getIp(), Integer.parseInt(temp.getPort()));
             udpSocket.send(sMessage);
         }
     }
 
-
-
-    public ServerThread5(Socket socket) {
-        this.socket = socket;
+    private void shutSocket(){
+        this.offline(enduser);
+        this.updateDBoff(enduser);
         try {
-            this.out = new ObjectOutputStream(socket.getOutputStream());
-            this.in = new ObjectInputStream(socket.getInputStream());
+            this.socket.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
 
+    public ServerThread5(Socket socket) throws IOException {
+        this.socket = socket;
+        this.out = new ObjectOutputStream(socket.getOutputStream());
+        this.in = new ObjectInputStream(socket.getInputStream());
     }
 
     @Override
@@ -142,10 +140,11 @@ public class ServerThread5 extends Thread {
                     }
 
                 } else if (CommonUse.LOGIN.equals(tcpMessage.getHead())) {
-
                     Qquser qquser = (Qquser) tcpMessage.getBody(CommonUse.QQ_USER);
+                    this.enduser = qquser;
                     if (this.checkUser(qquser)) {
                         //改库
+                        qquser.setState("1");
                         this.updateDB(qquser);
                         //得到完整用户
                         this.fullUser = (Qquser) this.getFullUser(qquser.getAccount());
@@ -161,20 +160,12 @@ public class ServerThread5 extends Thread {
                 } else if (CommonUse.FIND_FRIEND.equals(tcpMessage.getHead())) {
                     Qquser tempUser = (Qquser) tcpMessage.getBody(CommonUse.QQ_USER);
                     sMessage.setBody(CommonUse.FRIENDS_INFO, this.getFriends(tempUser.getAccount()));
-                }else if (CommonUse.OFFLINE.equals(tcpMessage.getHead())) {
-                    Qquser qquser = (Qquser) tcpMessage.getBody(CommonUse.QQ_USER);
-                    //该库
-                    this.updateDBoff(qquser);
-                    //通知下线
-                    this.offline(this.fullUser);
-                    this.socket.close();
                 }
                 this.out.writeObject(sMessage);
                 this.out.flush();
             }
         } catch (IOException e) {
-            System.out.println(e.getMessage());
-            System.out.println("一个客户端已经断开");
+            this.shutSocket();
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }

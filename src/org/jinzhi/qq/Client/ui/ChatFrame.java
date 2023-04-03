@@ -1,5 +1,6 @@
 package org.jinzhi.qq.Client.ui;
 
+import org.jinzhi.qq.Client.pub.CommonUse;
 import org.jinzhi.qq.Client.pub.UDPSocket;
 import org.jinzhi.qq.Server.bean.Qquser;
 
@@ -9,10 +10,15 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.Map;
 
-public class ChatFrame extends JFrame implements ActionListener {
-    private UDPSocket udpSocket = null;
+public class ChatFrame extends JFrame {
+
+    private UDPSocket rudpSocket = null;
+    private UDPSocket sudpSocket = null;
     private Qquser qquser = null;
+    private Qquser myuser = null;
+    public Map chatmap = null;
 
 
     private JTextArea messageArea; // 消息显示区域
@@ -35,7 +41,7 @@ public class ChatFrame extends JFrame implements ActionListener {
         sendButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                sendMessage();
+                sendMessage(inputField);
             }
         });
 
@@ -49,8 +55,21 @@ public class ChatFrame extends JFrame implements ActionListener {
         add(bottomPanel, BorderLayout.SOUTH);
     }
 
-    private void sendMessage() {
+    private void sendMessage(JTextField messsage) {
+        String info = messsage.getText().trim();
+        if (!info.isEmpty()) {
+            sudpSocket.send("message" + CommonUse.UDP_PACKET_SYMBOL + this.myuser.getName()
+                    + CommonUse.UDP_PACKET_SYMBOL + this.myuser.getIp() + CommonUse.UDP_PACKET_SYMBOL +
+                    this.myuser.getPort() + CommonUse.UDP_PACKET_SYMBOL + info + CommonUse.UDP_PACKET_SYMBOL);
+            messageArea.append("我：" + info + "\n");
+            inputField.setText("");
+        }
+    }
 
+    public void reMessage(String rmessage) {
+        if (!rmessage.isEmpty()) {
+            messageArea.append(qquser.getName() + "：" + rmessage + "\n");
+        }
     }
 
     private void closeChat() {
@@ -58,28 +77,27 @@ public class ChatFrame extends JFrame implements ActionListener {
         dispose();
     }
 
-
-    public ChatFrame(Qquser qquser, UDPSocket udpSocket) {
+    public ChatFrame(Qquser qquser,Qquser myuser,UDPSocket udpSocket, Map<String, ChatFrame> chatmap) {
+        this.myuser = myuser;
         this.qquser = qquser;
-        this.udpSocket = udpSocket;
+        this.sudpSocket = new UDPSocket(qquser.getIp(), Integer.valueOf(qquser.getPort()));
+        this.rudpSocket = new UDPSocket();
+        this.chatmap = chatmap;
 
         setTitle("Chat with " + qquser.getName());
         setSize(480, 300);
         setLocationRelativeTo(null); // 窗口居中
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
         // 设置窗口关闭事件
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                closeChat();
+                // 从map中删除键值对
+                chatmap.remove(qquser.getName());
+                dispose();
             }
         });
-
         initUI();
-    }
-
-    @Override
-    public void actionPerformed(ActionEvent e) {
-
     }
 }

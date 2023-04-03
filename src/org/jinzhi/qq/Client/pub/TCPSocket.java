@@ -1,6 +1,5 @@
 package org.jinzhi.qq.Client.pub;
 
-import org.jinzhi.qq.Server.bean.Qquser;
 import org.jinzhi.qq.Server.pub.TCPMessage;
 
 import java.io.IOException;
@@ -42,18 +41,18 @@ public class TCPSocket {
         return this.socket.getLocalAddress().getHostAddress();
     }
 
-    public void start(Qquser qquser) {
-        TCPMessage tcpMessage = new TCPMessage();
-        tcpMessage.setHead(CommonUse.OFFLINE);
-        tcpMessage.setBody(CommonUse.QQ_USER,qquser);
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            try {
-                this.out.writeObject(tcpMessage);
-                this.out.flush();
-                socket.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }));
-    }
+//    public void start(Qquser qquser) {
+//        TCPMessage tcpMessage = new TCPMessage();
+//        tcpMessage.setHead(CommonUse.OFFLINE);
+//        tcpMessage.setBody(CommonUse.QQ_USER,qquser);
+//        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+//            try {
+//                this.out.writeObject(tcpMessage);
+//                this.out.flush();
+//                socket.close();
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//        }));
+//    }
 }
